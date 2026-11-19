@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>기회 레이더 대시보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root { --ink:#111; --paper:#F6F4EE; --card:#EFECE4; --lime:#EAF53B; --pink:#FF3EA5; --sky:#33D6FF; --grey:#6F6B63; --rule:#D9D5CB; --red:#E5484D; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#E9E6DE; color:var(--ink); font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; word-break:keep-all; }
+  .wrap { max-width: 1080px; margin: 0 auto; background: var(--paper); min-height: 100vh; padding: 28px 24px 60px; }
+  h1 { font-size: 40px; font-weight: 900; letter-spacing: -1.5px; margin: 6px 0 0; }
+  .swipe { height: 12px; background: var(--lime); width: 0; margin-top: 2px; animation: swipe .9s ease-out .2s forwards; max-width: 430px; }
+  @keyframes swipe { to { width: 100%; } }
+  .rule { height: 3px; background: var(--ink); margin-top: 18px; } .rule2 { height: 1px; background: var(--ink); margin-top: 3px; }
+  .meta { display:flex; justify-content:space-between; font-size: 12px; font-weight: 700; color: var(--grey); letter-spacing: 1px; }
+  .tiles { display:grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 24px; }
+  .tile { background: var(--card); border: 3px solid var(--lime); padding: 14px 14px 12px; }
+  .tile .k { font-size: 12px; font-weight: 800; color: var(--grey); }
+  .tile .v { font-size: 34px; font-weight: 900; letter-spacing: -1px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .tile.hl { background: var(--lime); }
+  .sec { display:flex; align-items:center; gap: 12px; margin: 38px 0 14px; }
+  .sec h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin: 0; white-space: nowrap; }
+  .sec .line { flex: 1; height: 1px; background: var(--ink); } .sec .n { font-size: 13px; font-weight: 800; color: var(--grey); }
+  .board { display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .col { background: #fff; border: 1px solid var(--rule); padding: 12px; min-height: 120px; }
+  .col h3 { margin: 0 0 8px; font-size: 14px; font-weight: 900; display:flex; justify-content: space-between; }
+  .item { display:flex; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--rule); }
+  .item:last-child { border-bottom: 0; }
+  .score { flex: none; width: 44px; height: 44px; background: var(--ink); color: var(--lime); font-weight: 900; font-size: 18px; display:flex; align-items:center; justify-content:center; font-variant-numeric: tabular-nums; }
+  .score.hi { background: var(--lime); color: var(--ink); }
+  .item a { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 15px; line-height: 1.4; }
+  .item a:hover { text-decoration: underline; }
+  .sub { font-size: 12px; color: var(--grey); margin-top: 3px; line-height: 1.5; }
+  .pill { display:inline-block; font-size: 11px; font-weight: 900; padding: 3px 7px; border-radius: 5px; margin-right: 4px; vertical-align: 1px; }
+  .t-contest { background: var(--pink); } .t-bid, .t-pre_spec { background: var(--sky); } .t-grant { background: #3DFF8B; }
+  .dd { color: var(--red); font-weight: 800; }
+  .tools { display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tools input { flex: 1; min-width: 180px; padding: 11px 12px; font: inherit; font-size: 15px; border: 2px solid var(--ink); background: #fff; }
+  .tools button { font: inherit; font-size: 13px; font-weight: 800; padding: 9px 14px; border: 2px solid var(--ink); background: #fff; cursor: pointer; border-radius: 999px; }
+  .tools button.on { background: var(--ink); color: var(--lime); }
+  .list { background: #fff; border: 1px solid var(--rule); padding: 4px 14px; }
+  .bars .b { display:grid; grid-template-columns: 120px 1fr 52px; align-items:center; gap: 10px; font-size: 13px; margin: 6px 0; }
+  .bars .t { height: 10px; background: var(--rule); } .bars .f { height: 10px; background: var(--ink); }
+  .empty { color: var(--grey); font-size: 13px; padding: 14px 0; }
+  .lock { max-width: 420px; margin: 18vh auto 0; background: var(--paper); padding: 28px; border: 3px solid var(--lime); }
+  .lock input { width: 100%; padding: 13px; font: inherit; font-size: 16px; border: 2px solid var(--ink); margin-top: 14px; }
+  .lock button { width: 100%; margin-top: 10px; padding: 14px; font: inherit; font-size: 16px; font-weight: 900; background: var(--lime); border: 0; cursor: pointer; }
+  .err { color: var(--red); font-size: 13px; font-weight: 700; margin-top: 8px; min-height: 18px; }
+  @media (max-width: 760px) {
+    .wrap { padding: 20px 14px 50px; } h1 { font-size: 28px; }
+    .tiles { grid-template-columns: repeat(2, 1fr); } .tile .v { font-size: 26px; }
+    .board { grid-template-columns: 1fr; }
+    .bars .b { grid-template-columns: 96px 1fr 44px; }
+  }
+</style>
+</head>
+<body>
+<div id="lock" class="lock" hidden>
+  <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;">조선혁신소 기회 레이더</div>
+  <div style="font-size:14px;color:var(--grey);margin-top:6px;">팀 대시보드 · 팀 비밀번호를 넣어 주세요</div>
+  <form id="f"><input id="pw" type="password" autocomplete="current-password" placeholder="팀 비밀번호"><button>열기</button></form>
+  <div class="err" id="err"></div>
+</div>
+
+<div id="app" class="wrap" hidden>
+  <div class="meta"><span>조선혁신소</span><span id="at"></span></div>
+  <h1>조선혁신소 기회 레이더</h1>
+  <div class="swipe"></div>
+  <div class="rule"></div><div class="rule2"></div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="sec"><h2>진행 보드</h2><div class="line"></div></div>
+  <div class="board">
+    <div class="col"><h3><span>한다</span><span id="c-go"></span></h3><div id="b-go"></div></div>
+    <div class="col"><h3><span>제출 완료</span><span id="c-sub"></span></h3><div id="b-sub"></div></div>
+    <div class="col"><h3><span>결과 (선정·탈락)</span><span id="c-res"></span></h3><div id="b-res"></div></div>
+  </div>
+
+  <div class="sec"><h2>볼만한 공고</h2><div class="line"></div><span class="n" id="n-watch"></span></div>
+  <div class="tools">
+    <input id="q" placeholder="제목·기관 검색 (예: AI 영상, 숏폼, 캐릭터)">
+    <button data-t="" class="on">전체</button><button data-t="contest">공모전</button><button data-t="bid">입찰</button><button data-t="grant">지원사업</button>
+  </div>
+  <div class="list" id="watch"></div>
+
+  <div class="sec"><h2>최근 30일 추천 메일</h2><div class="line"></div><span class="n" id="n-rec"></span></div>
+  <div class="list" id="rec"></div>
+
+  <div class="sec"><h2>결정 기록</h2><div class="line"></div></div>
+  <div class="list" id="dec"></div>
+
+  <div class="sec"><h2>출처별 수집 (7일)</h2><div class="line"></div></div>
+  <div class="bars" id="src"></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://wfcsfoisuepjpmhvlvvt.supabase.co";
+const PUBLISHABLE_KEY = "sb_publishable_73Q7C1gJ9_xOvMMZMbTWXw__xxfR9c4"; // 공개용 키: 비밀번호가 맞을 때만 데이터를 주는 함수만 부를 수 있음
+const SOURCE = { g2b_bid: "나라장터 입찰", g2b_prespec: "나라장터 사전규격", bizinfo: "기업마당", kstartup: "K-Startup",
+  kocca_support: "콘진원 지원", kocca_bid: "콘진원 입찰", thinkgood: "씽굿", contestkorea: "콘테스트코리아",
+  allcon: "올콘", theteams: "더팀스", aimatters: "AI 매터스", wevity: "위비티" };
+const TYPE = { contest: "공모전", bid: "입찰", pre_spec: "사전규격", grant: "지원사업" };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let DATA = null, typeFilter = "";
+
+function store(k, v) { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+function dday(d) {
+  if (!d) return "";
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const n = Math.round((new Date(d + "T00:00:00") - t) / 86400000);
+  return n < 0 ? "마감" : n === 0 ? "오늘 마감" : `D-${n}`;
+}
+function row(x, extra = "") {
+  const s = x.total != null ? `<div class="score ${x.total >= 80 ? "hi" : ""}">${x.total}</div>` : "";
+  const dl = x.deadline ? `<span class="dd">${dday(x.deadline)}</span> · ${x.deadline.slice(5).replace("-", ".")}일 까지` : "";
+  return `<div class="item">${s}<div><span class="pill t-${esc(x.notice_type)}">${TYPE[x.notice_type] || ""}</span>
+    <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>
+    <div class="sub">${[esc(x.organization), dl, extra].filter(Boolean).join(" · ")}</div>
+    ${x.reason ? `<div class="sub">“ ${esc(x.reason)} ”</div>` : ""}</div></div>`;
+}
+function fill(id, items, extra = () => "", empty = "아직 없어요") {
+  $(id).innerHTML = items.length ? items.map((x) => row(x, extra(x))).join("") : `<div class="empty">${empty}</div>`;
+}
+function renderWatch() {
+  const q = $("q").value.trim().toLowerCase();
+  const items = DATA.watch.filter((x) => (!typeFilter || x.notice_type === typeFilter || (typeFilter === "bid" && x.notice_type === "pre_spec"))
+    && (!q || (x.title + " " + (x.organization || "")).toLowerCase().includes(q)));
+  $("n-watch").textContent = `${items.length}건`;
+  fill("watch", items, (x) => (x.grade === "alert" ? "아침 메일 대상" : "50점 이상"), "조건에 맞는 공고가 없어요");
+}
+function render(d) {
+  DATA = d;
+  $("at").textContent = "갱신 " + new Date(d.generated_at).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const st = d.stats.by_status || {};
+  const tiles = [["모은 공고 (7일)", d.stats.notices_7d.toLocaleString()], ["볼만한 공고", d.watch.length, true],
+    ["한다", st["한다"] || 0], ["제출 완료", st["제출 완료"] || 0], ["선정", st["선정"] || 0, (st["선정"] || 0) > 0]];
+  $("tiles").innerHTML = tiles.map(([k, v, hl]) => `<div class="tile ${hl ? "hl" : ""}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+  const p = d.pipeline;
+  const go = p.filter((x) => x.status === "한다"), sub = p.filter((x) => x.status === "제출 완료"), res = p.filter((x) => ["선정", "탈락"].includes(x.status));
+  $("c-go").textContent = go.length; $("c-sub").textContent = sub.length; $("c-res").textContent = res.length;
+  fill("b-go", go); fill("b-sub", sub); fill("b-res", res, (x) => `<b>${x.status}</b>`);
+  renderWatch();
+  $("n-rec").textContent = `${d.recommended.length}건`;
+  fill("rec", d.recommended, (x) => `${x.send_date.slice(5).replace("-", ".")} 발송 · ${esc(x.status)}`, "아직 정식 아침 메일이 나가지 않았어요");
+  $("dec").innerHTML = d.decisions.length ? d.decisions.map((x) => `<div class="item"><div><span class="pill" style="background:var(--lime)">${esc(x.to_status)}</span>
+     <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>
+     <div class="sub">${esc(x.who)} · ${new Date(x.created_at).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div></div></div>`).join("")
+    : `<div class="empty">아직 없어요</div>`;
+  const src = Object.entries(d.stats.by_source_7d || {}).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...src.map((s) => s[1]));
+  $("src").innerHTML = src.map(([k, v]) => `<div class="b"><span>${SOURCE[k] || k}</span><div class="t"><div class="f" style="width:${(100 * v / max).toFixed(1)}%"></div></div><b style="text-align:right">${v.toLocaleString()}</b></div>`).join("");
+}
+async function open(pw) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/dashboard_data`, {
+    method: "POST", headers: { apikey: PUBLISHABLE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_password: pw }) });
+  const d = await res.json();
+  if (!d.ok) throw new Error("bad");
+  store("radar_pw", pw);
+  $("lock").hidden = true; $("app").hidden = false;
+  render(d);
+}
+$("f").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("err").textContent = "";
+  try { await open($("pw").value); } catch (err) { $("err").textContent = "비밀번호가 맞지 않거나 연결에 실패했어요."; }
+});
+$("q").addEventListener("input", renderWatch);
+document.querySelectorAll(".tools button").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll(".tools button").forEach((x) => x.classList.remove("on"));
+  b.classList.add("on"); typeFilter = b.dataset.t; renderWatch();
+}));
+(async () => {
+  const saved = load("radar_pw");
+  if (saved) { try { await open(saved); return; } catch (e) { store("radar_pw"); } }
+  $("lock").hidden = false;
+})();
+</script>
+</body>
+</html>
