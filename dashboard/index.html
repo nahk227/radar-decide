@@ -169,7 +169,7 @@ const SUPABASE_URL = "https://wfcsfoisuepjpmhvlvvt.supabase.co";
 const PUBLISHABLE_KEY = "sb_publishable_73Q7C1gJ9_xOvMMZMbTWXw__xxfR9c4"; // 공개용 키: 비밀번호가 맞을 때만 데이터를 주는 함수만 부를 수 있음
 const SOURCE = { g2b_bid: "나라장터 입찰", g2b_prespec: "나라장터 사전규격", bizinfo: "기업마당", kstartup: "K-Startup",
   kocca_support: "콘진원 지원", kocca_bid: "콘진원 입찰", thinkgood: "씽굿", contestkorea: "콘테스트코리아",
-  allcon: "올콘", theteams: "더팀스", aimatters: "AI 매터스", wevity: "위비티" };
+  allcon: "올콘", theteams: "더팀스", aimatters: "AI 매터스", wevity: "위비티", manual: "직접 기록" };
 const TYPE = { contest: "공모전", bid: "입찰", pre_spec: "사전규격", grant: "지원사업" };
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -191,7 +191,7 @@ function dday(d) {
 }
 function row(x, extra = "") {
   const s = x.total != null ? `<div class="score ${x.total >= 80 ? "hi" : ""}">${x.total}<small>점</small></div>` : "";
-  const right = x.deadline ? `<div class="right"><span class="dd">${dday(x.deadline)}</span><small>${x.deadline.slice(5).replace("-", ".")}일 까지</small></div>` : "";
+  const right = x.deadline && !["선정", "탈락", "제출 완료"].includes(x.status) ? `<div class="right"><span class="dd">${dday(x.deadline)}</span><small>${x.deadline.slice(5).replace("-", ".")}일 까지</small></div>` : "";
   return `<div class="item">${s}<div class="body"><span class="pill t-${esc(x.notice_type)}">${TYPE[x.notice_type] || ""}</span>
     <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>
     <div class="sub">${[esc(x.organization), extra].filter(Boolean).join(" · ")}</div>
@@ -227,10 +227,24 @@ function render(d) {
   if (location.hash.startsWith("#calendar")) setTimeout(() => $("calendar").scrollIntoView({ behavior: "smooth" }), 150);
   $("n-rec").textContent = `${d.recommended.length}건`;
   fill("rec", d.recommended, (x) => `${x.send_date.slice(5).replace("-", ".")} 발송 · ${esc(x.status)}`, "아직 정식 아침 메일이 나가지 않았어요");
-  $("dec").innerHTML = d.decisions.length ? d.decisions.map((x) => `<div class="item"><div><span class="pill" style="background:var(--lime)">${esc(x.to_status)}</span>
-     <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>
-     <div class="sub">${esc(x.who)} · ${new Date(x.created_at).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div></div></div>`).join("")
-    : `<div class="empty">아직 없어요</div>`;
+  // one row per notice: the steps it went through, latest first
+  const groups = new Map();
+  for (const x of [...d.decisions].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))) {
+    const key = x.title + "|" + (x.url || "");
+    if (!groups.has(key)) groups.set(key, { title: x.title, url: x.url, steps: [] });
+    groups.get(key).steps.push(x);
+  }
+  const STEP_BG = { "한다": "var(--lime)", "제출 완료": "var(--orange)", "선정": "var(--lime)", "탈락": "#E5E1D6", "안 한다": "#E5E1D6" };
+  const md = (s) => new Date(s).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" }).replace(/\s/g, "").replace(/\.$/, "");
+  const rows = [...groups.values()].sort((a, b) => String(b.steps.at(-1).created_at).localeCompare(String(a.steps.at(-1).created_at)));
+  $("dec").innerHTML = rows.length ? rows.map((g) => {
+    const chain = g.steps.map((s) => `<span class="pill" style="background:${STEP_BG[s.to_status] || "var(--lime)"}">${esc(s.to_status)}</span>`).join(' <b style="color:var(--grey)">→</b> ');
+    const when = g.steps.map((s) => `${md(s.created_at)} ${esc(s.to_status)}`).join(" · ");
+    const who = [...new Set(g.steps.map((s) => s.who).filter(Boolean))].join(", ");
+    const title = g.url ? `<a href="${esc(g.url)}" target="_blank" rel="noopener">${esc(g.title)}</a>` : `<b style="font-size:15px">${esc(g.title)}</b>`;
+    return `<div class="item"><div class="body"><div>${chain}</div><div style="margin-top:6px">${title}</div>
+      <div class="sub">${[esc(who), when].filter(Boolean).join(" · ")}</div></div></div>`;
+  }).join("") : `<div class="empty">아직 없어요</div>`;
   const src = Object.entries(d.stats.by_source_7d || {}).sort((a, b) => b[1] - a[1]);
   const max = Math.max(1, ...src.map((s) => s[1]));
   $("src").innerHTML = src.map(([k, v]) => `<div class="b"><span>${SOURCE[k] || k}</span><div class="t"><div class="f" style="width:${(100 * v / max).toFixed(1)}%"></div></div><b style="text-align:right">${v.toLocaleString()}</b></div>`).join("");
