@@ -62,6 +62,12 @@ async function record() {
       show("✅", "'한다'로 기록했어요", "go", [[r.title, "title"], ["담당자로 기록됐고, 마감 전에 다시 알려 드릴게요."]]);
     } else if (r.status === "안 한다") {
       show("👌", "'안 한다'로 기록했어요", "no", [[r.title, "title"], ["이 공고는 다시 알리지 않아요. 마음이 바뀌면 '한다'를 눌러도 돼요."]]);
+    } else if (r.changed && r.status === "제출 완료") {
+      show("📮", "'제출 완료'로 기록했어요", "go", [[r.title, "title"], ["수고했어요! 결과가 나오면 월요일 보드에서 선정/탈락을 눌러 주세요."]]);
+    } else if (r.changed && r.status === "선정") {
+      show("🎉", "'선정'으로 기록했어요", "go", [[r.title, "title"], ["축하해요! 금요일 리포트의 선정률과 상금 합계에 반영돼요."]]);
+    } else if (r.changed && r.status === "탈락") {
+      show("📝", "'탈락'으로 기록했어요", "no", [[r.title, "title"], ["기록해 둘게요. 다음 기회를 찾아 드릴게요."]]);
     } else {
       show("ℹ️", `이미 '${r.status}' 상태예요`, "", [[r.title, "title"], ["진행 중인 건이라 바꾸지 않았어요."]]);
     }
