@@ -36,6 +36,8 @@
   .hist .hh b { font-size: 16px; font-weight: 900; }
   .hist .hh button { font: inherit; font-size: 12px; font-weight: 800; background: none; border: 0; cursor: pointer; }
   .res { display:inline-block; font-size: 11px; font-weight: 900; padding: 3px 8px; }
+  .skip-toggle { display:flex; justify-content:space-between; width:100%; margin-top:10px; padding:12px 0 4px; border:0; border-top:1px dashed var(--rule); background:none; font:inherit; font-size:13px; font-weight:800; color:var(--grey); cursor:pointer; }
+  #skip-list[hidden] { display:none; }
   .res.won { background: var(--lime); } .res.lost { background: #E5E1D6; } .res.wait { background: var(--orange); } .tile.or { background: var(--orange); border-color: var(--orange); } .tile.or .k { color: var(--ink); } .tile.sk { background: var(--sky); border-color: var(--sky); } .tile.sk .k { color: var(--ink); }
   .sec { display:flex; align-items:center; gap: 12px; margin: 38px 0 14px; }
   .sec h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin: 0; white-space: nowrap; }
@@ -157,8 +159,8 @@
   <div class="sec" style="display:none"><h2>최근 30일 추천 메일</h2><div class="line"></div><span class="n" id="n-rec"></span></div>
   <div class="list" id="rec" style="display:none"></div>
 
-  <div class="sec"><h2>결정 기록</h2><div class="line"></div></div>
-  <div class="list" id="dec"></div>
+  <!-- 결정 기록: 2026-11-19 숨김 (지원 기록 패널 + 제외한 공고로 대체) -->
+  <div class="list" id="dec" style="display:none"></div>
 
   <div class="sec"><h2>출처별 수집 (7일)</h2><div class="line"></div></div>
   <div class="bars" id="src"></div>
@@ -320,6 +322,18 @@ function renderHistory() {
       <div class="sub">${[esc(x.organization), when].filter(Boolean).join(" · ")}</div></div>
       <div class="right"><span class="res ${cls}">${label}</span></div></div>`;
   }).join("") : `<div class="empty">아직 지원 기록이 없어요. 리마인드 메일이나 월요일 보드에서 '제출 완료'를 누르면 쌓여요.</div>`;
+  const sk = DATA.skipped || [];
+  if (sk.length) {
+    $("hist-list").innerHTML += `<button class="skip-toggle" id="skip-toggle">제외한 공고 ${sk.length}건 <span>펼치기 ↓</span></button>
+      <div id="skip-list" hidden>${sk.map((x) => `<div class="item"><div class="body"><span class="pill t-${esc(x.notice_type)}">${TYPE[x.notice_type] || ""}</span>
+        ${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>` : `<b style="font-size:15px">${esc(x.title)}</b>`}
+        <div class="sub">${[esc(x.organization), x.who ? esc(x.who) : "", x.skipped_at ? kday(x.skipped_at) + " 제외" : ""].filter(Boolean).join(" · ")}</div></div>
+        <div class="right">${x.total != null ? `<b>${x.total}점</b>` : ""}</div></div>`).join("")}</div>`;
+    $("skip-toggle").addEventListener("click", () => {
+      const l = $("skip-list"); l.hidden = !l.hidden;
+      $("skip-toggle").querySelector("span").textContent = l.hidden ? "펼치기 ↓" : "접기 ↑";
+    });
+  }
 }
 let openAct = null;
 const TITLES = { watch: "볼만한 공고", soon: "7일 안 마감", go: "한다 (진행 중)", sub: "제출 완료", hist: "지원 기록" };
