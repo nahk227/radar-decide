@@ -127,7 +127,7 @@
 
   <div class="tiles" id="tiles"></div>
   <div class="hist" id="hist" hidden>
-    <div class="hh"><b>지원 기록</b><button id="hist-x">닫기 ✕</button></div>
+    <div class="hh"><b id="hist-title">지원 기록</b><button id="hist-x">닫기 ✕</button></div>
     <div id="hist-list"></div>
   </div>
 
@@ -220,9 +220,9 @@ function render(d) {
   const st = d.stats.by_status || {};
   const soon = d.watch.filter((x) => { const n = daysLeftOf(x.deadline); return n != null && n >= 0 && n <= 7; }).length;
   const tiles = [["볼만한 공고", d.watch.length, true, "", "", "watch"], ["7일 안 마감", soon, false, "", "", "soon"],
-    ["한다 (진행 중)", st["한다"] || 0, false, "", "", "board"], ["제출 완료", st["제출 완료"] || 0, false, "or", "", "board"],
+    ["한다 (진행 중)", st["한다"] || 0, false, "", "", "go"], ["제출 완료", st["제출 완료"] || 0, false, "or", "", "sub"],
     ["지원 기록", (st["제출 완료"] || 0) + (st["선정"] || 0) + (st["탈락"] || 0), false, "", `선정 ${st["선정"] || 0}건 · 탈락 ${st["탈락"] || 0}건`, "hist"]];
-  $("tiles").innerHTML = tiles.map(([k, v, hl, c, note, act]) => `<div class="tile ${hl ? "hl" : ""} ${c || ""}" data-act="${act}" role="button" tabindex="0"><div class="k">${k}</div><div class="v">${v}</div>${note ? `<div class="k" style="margin-top:4px">${note}</div>` : ""}<div class="go">${act === "hist" ? "목록 보기 ↓" : "바로 가기 →"}</div></div>`).join("");
+  $("tiles").innerHTML = tiles.map(([k, v, hl, c, note, act]) => `<div class="tile ${hl ? "hl" : ""} ${c || ""}" data-act="${act}" role="button" tabindex="0"><div class="k">${k}</div><div class="v">${v}</div>${note ? `<div class="k" style="margin-top:4px">${note}</div>` : ""}<div class="go">목록 보기 ↓</div></div>`).join("");
   renderHistory();
   const p = d.pipeline;
   const go = p.filter((x) => x.status === "한다"), sub = p.filter((x) => x.status === "제출 완료"), res = p.filter((x) => ["선정", "탈락"].includes(x.status));
@@ -313,24 +313,33 @@ function renderHistory() {
       <div class="right"><span class="res ${cls}">${label}</span></div></div>`;
   }).join("") : `<div class="empty">아직 지원 기록이 없어요. 리마인드 메일이나 월요일 보드에서 '제출 완료'를 누르면 쌓여요.</div>`;
 }
+let openAct = null;
+const TITLES = { watch: "볼만한 공고", soon: "7일 안 마감", go: "한다 (진행 중)", sub: "제출 완료", hist: "지원 기록" };
+function panelItems(act) {
+  const p = DATA.pipeline;
+  if (act === "watch") return DATA.watch.map((x) => row(x, x.grade === "alert" ? "아침 메일 대상" : "50점 이상"));
+  if (act === "soon") return DATA.watch.filter((x) => { const n = daysLeftOf(x.deadline); return n != null && n >= 0 && n <= 7; })
+    .sort((a, b) => a.deadline.localeCompare(b.deadline)).map((x) => row(x, x.grade === "alert" ? "아침 메일 대상" : "50점 이상"));
+  if (act === "go") return p.filter((x) => x.status === "한다").sort((a, b) => String(a.deadline || "9").localeCompare(String(b.deadline || "9"))).map((x) => row(x));
+  if (act === "sub") return p.filter((x) => x.status === "제출 완료").map((x) => row(x, x.submitted_at ? kday(x.submitted_at) + " 제출 · 결과 대기" : "결과 대기"));
+  return null;
+}
 function tileAction(act) {
-  if (act === "hist") { const h = $("hist"); h.hidden = !h.hidden; if (!h.hidden) h.scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
-  if (act === "board") return document.querySelector(".board").scrollIntoView({ behavior: "smooth", block: "start" });
-  if (act === "watch" || act === "soon") {
-    $("q").value = ""; typeFilter = "";
-    document.querySelectorAll(".tools button").forEach((x) => x.classList.toggle("on", x.dataset.t === ""));
-    renderWatch();
-    if (act === "soon") {
-      const items = DATA.watch.filter((x) => { const n = daysLeftOf(x.deadline); return n != null && n >= 0 && n <= 7; });
-      $("n-watch").textContent = `7일 안 마감 ${items.length}건`;
-      fill("watch", items, (x) => (x.grade === "alert" ? "아침 메일 대상" : "50점 이상"), "7일 안에 마감되는 공고가 없어요");
-    }
-    $("watch").scrollIntoView({ behavior: "smooth", block: "start" });
+  const h = $("hist");
+  if (!h.hidden && openAct === act) { h.hidden = true; openAct = null; return; }
+  openAct = act;
+  $("hist-title").textContent = TITLES[act] || "";
+  if (act === "hist") renderHistory();
+  else {
+    const items = panelItems(act);
+    $("hist-list").innerHTML = items.length ? items.join("") : '<div class="empty">아직 없어요</div>';
   }
+  h.hidden = false;
+  h.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 $("tiles").addEventListener("click", (e) => { const t = e.target.closest(".tile"); if (t) tileAction(t.dataset.act); });
 $("tiles").addEventListener("keydown", (e) => { if (e.key === "Enter") { const t = e.target.closest(".tile"); if (t) tileAction(t.dataset.act); } });
-$("hist-x").addEventListener("click", () => { $("hist").hidden = true; });
+$("hist-x").addEventListener("click", () => { $("hist").hidden = true; openAct = null; });
 
 async function open(pw) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/dashboard_data`, {
