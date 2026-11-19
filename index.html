@@ -18,9 +18,14 @@
            animation: rise .45s cubic-bezier(.2,.9,.3,1.2) both; }
   @keyframes rise { from { opacity:0; transform: translateY(18px) scale(.98); } to { opacity:1; transform:none; } }
   .mast { font-size:13px; font-weight:900; letter-spacing:-0.2px; }
-  .swipe { height:8px; background:var(--lime); width:0; margin-top:2px; animation: swipe .7s ease-out .25s forwards; max-width:170px; }
-  @keyframes swipe { to { width:100%; } }
-  .rule { height:3px; background:var(--ink); margin-top:12px; } .rule2 { height:1px; background:var(--ink); margin-top:3px; }
+
+  /* hand-drawn highlighter under the title: as wide as the words, drawn once */
+  .hl { position: relative; display: inline-block; z-index: 0; }
+  .hand { position: absolute; left: -3%; bottom: -0.32em; width: 106%; height: 0.55em; z-index: -1; overflow: visible; }
+  .hand path { fill: none; stroke: #EAF53B; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round;
+               stroke-dasharray: 320; stroke-dashoffset: 320; animation: draw .75s cubic-bezier(.3,.7,.3,1) .25s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .rule { height:3px; background:var(--ink); margin-top:16px; } .rule2 { height:1px; background:var(--ink); margin-top:3px; }
 
   .stamp { margin: 30px auto 0; width: 132px; height: 132px; border-radius: 50%; background: var(--lime); display:flex; flex-direction:column;
            align-items:center; justify-content:center; transform: rotate(-8deg) scale(0); animation: stamp .5s cubic-bezier(.2,1.6,.4,1) .35s forwards; }
@@ -64,8 +69,7 @@
 </head>
 <body>
 <main class="sheet">
-  <div class="mast">조선혁신소 기회 레이더</div>
-  <div class="swipe"></div>
+  <div class="mast"><span class="hl">조선혁신소 기회 레이더<svg class="hand" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path d="M3 9 C 60 6.5, 110 10.5, 170 7.5 S 260 5.5, 297 6.8" /></svg></span></div>
   <div class="rule"></div><div class="rule2"></div>
   <div id="out"><div class="loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div style="margin-top:12px">기록하는 중</div></div></div>
   <noscript><p class="lead">이 페이지는 자바스크립트가 필요해요. 브라우저에서 다시 열어 주세요.</p></noscript>
@@ -83,14 +87,6 @@ function daysLeft(d) {
   if (!d) return null;
   const t = new Date(); t.setHours(0, 0, 0, 0);
   return Math.round((new Date(d + "T00:00:00") - t) / 86400000);
-}
-function calendar(r) {
-  if (!r.deadline) return "";
-  const d = r.deadline.replace(/-/g, "");
-  const n = new Date(r.deadline + "T00:00:00"); n.setDate(n.getDate() + 1);
-  const d2 = n.toISOString().slice(0, 10).replace(/-/g, "");
-  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("[마감] " + r.title)
-    + "&dates=" + d + "/" + d2 + "&details=" + encodeURIComponent(r.url || "");
 }
 const COPY = {
   "한다":      { stamp: ["한다", "GO"], cls: "", h: "<em>한다</em>로 기록했어요", lead: "좋은 선택이에요. 마감까지 함께 챙길게요.",
@@ -121,14 +117,14 @@ function render(r) {
     </div>
     ${c.steps.length ? `<div class="next"><div class="k">NEXT</div><ul class="steps">${c.steps.map((s, i) => `<li><i>${i + 1}</i><span>${s}</span></li>`).join("")}</ul></div>` : ""}
     <div class="btns">
-      ${r.status === "한다" && r.deadline ? `<a class="btn primary" href="${calendar(r)}" target="_blank" rel="noopener">📅 캘린더에 마감 넣기</a>` : ""}
+      ${r.deadline ? `<a class="btn primary" href="./dashboard/#calendar=${r.deadline}">🗓 우리 마감 캘린더에서 보기</a>` : ""}
       ${r.url ? `<a class="btn ghost" href="${esc(r.url)}" target="_blank" rel="noopener">공고 원문 보기</a>` : ""}
     </div>
-    <div class="foot"><a href="./dashboard/#calendar">마감 캘린더에서 보기 →</a></div>`;
+    <div class="foot"><a href="./dashboard/">팀 대시보드 열기 →</a></div>`;
 }
 function fail(heading, why) {
   out.innerHTML = `<div class="stamp soft"><b>!</b><span>OOPS</span></div><h1>${heading}</h1><p class="lead">${why}</p>
-    <div class="foot"><a href="./dashboard/#calendar">마감 캘린더에서 보기 →</a></div>`;
+    <div class="foot"><a href="./dashboard/">팀 대시보드 열기 →</a></div>`;
 }
 
 async function record() {

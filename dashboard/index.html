@@ -14,9 +14,14 @@
   body { margin:0; background:#E9E6DE; color:var(--ink); font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; word-break:keep-all; }
   .wrap { max-width: 1080px; margin: 0 auto; background: var(--paper); min-height: 100vh; padding: 28px 24px 60px; }
   h1 { font-size: 40px; font-weight: 900; letter-spacing: -1.5px; margin: 6px 0 0; }
-  .swipe { height: 12px; background: var(--lime); width: 0; margin-top: 2px; animation: swipe .9s ease-out .2s forwards; max-width: 430px; }
-  @keyframes swipe { to { width: 100%; } }
-  .rule { height: 3px; background: var(--ink); margin-top: 18px; } .rule2 { height: 1px; background: var(--ink); margin-top: 3px; }
+
+  /* hand-drawn highlighter under the title: as wide as the words, drawn once */
+  .hl { position: relative; display: inline-block; z-index: 0; }
+  .hand { position: absolute; left: -3%; bottom: -0.32em; width: 106%; height: 0.55em; z-index: -1; overflow: visible; }
+  .hand path { fill: none; stroke: #EAF53B; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round;
+               stroke-dasharray: 320; stroke-dashoffset: 320; animation: draw .75s cubic-bezier(.3,.7,.3,1) .25s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .rule { height: 3px; background: var(--ink); margin-top: 24px; } .rule2 { height: 1px; background: var(--ink); margin-top: 3px; }
   .meta { display:flex; justify-content:space-between; font-size: 12px; font-weight: 700; color: var(--grey); letter-spacing: 1px; }
   .tiles { display:grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 24px; }
   .tile { background: var(--card); border: 3px solid var(--lime); padding: 14px 14px 12px; }
@@ -103,8 +108,7 @@
 
 <div id="app" class="wrap" hidden>
   <div class="meta"><span>조선혁신소</span><span id="at"></span></div>
-  <h1>조선혁신소 기회 레이더</h1>
-  <div class="swipe"></div>
+  <h1><span class="hl">조선혁신소 기회 레이더<svg class="hand" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path d="M3 9 C 60 6.5, 110 10.5, 170 7.5 S 260 5.5, 297 6.8" /></svg></span></h1>
   <div class="rule"></div><div class="rule2"></div>
 
   <div class="tiles" id="tiles"></div>
@@ -199,6 +203,7 @@ function render(d) {
   fill("b-go", go); fill("b-sub", sub); fill("b-res", res, (x) => `<b>${x.status}</b>`);
   renderWatch();
   renderCal();
+  if (location.hash.startsWith("#calendar")) setTimeout(() => $("calendar").scrollIntoView({ behavior: "smooth" }), 150);
   $("n-rec").textContent = `${d.recommended.length}건`;
   fill("rec", d.recommended, (x) => `${x.send_date.slice(5).replace("-", ".")} 발송 · ${esc(x.status)}`, "아직 정식 아침 메일이 나가지 않았어요");
   $("dec").innerHTML = d.decisions.length ? d.decisions.map((x) => `<div class="item"><div><span class="pill" style="background:var(--lime)">${esc(x.to_status)}</span>
@@ -261,7 +266,9 @@ $("cal").addEventListener("click", (e) => {
   calSel = d.dataset.day; renderCal();
   if (window.innerWidth <= 760) $("cal-day").scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
-{ const n = new Date(); calY = n.getFullYear(); calM = n.getMonth(); }
+{ const n = new Date(); calY = n.getFullYear(); calM = n.getMonth();
+  const m = location.hash.match(/calendar=(\d{4})-(\d{2})-(\d{2})/);
+  if (m) { calY = +m[1]; calM = +m[2] - 1; calSel = m[1] + "-" + m[2] + "-" + m[3]; } }
 
 async function open(pw) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/dashboard_data`, {
