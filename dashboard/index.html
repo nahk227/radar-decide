@@ -154,13 +154,6 @@
     <div class="col"><h3><span>결과 (선정·탈락)</span><span id="c-res"></span></h3><div id="b-res"></div></div>
   </div>
 
-  <div class="sec"><h2>볼만한 공고</h2><div class="line"></div><span class="n" id="n-watch"></span></div>
-  <div class="tools">
-    <input id="q" placeholder="제목·기관 검색 (예: AI 영상, 숏폼, 캐릭터)">
-    <button data-t="" class="on">전체</button><button data-t="contest">공모전</button><button data-t="bid">입찰</button><button data-t="grant">지원사업</button>
-  </div>
-  <div class="list" id="watch"></div>
-
   <div class="sec"><h2>최근 30일 추천 메일</h2><div class="line"></div><span class="n" id="n-rec"></span></div>
   <div class="list" id="rec"></div>
 
@@ -208,6 +201,7 @@ function fill(id, items, extra = () => "", empty = "아직 없어요") {
   $(id).innerHTML = items.length ? items.map((x) => row(x, extra(x))).join("") : `<div class="empty">${empty}</div>`;
 }
 function renderWatch() {
+  if (!$("q")) return;  // 볼만한 공고 목록은 위 숫자 칸을 누르면 펼쳐짐
   const q = $("q").value.trim().toLowerCase();
   const items = DATA.watch.filter((x) => (!typeFilter || x.notice_type === typeFilter || (typeFilter === "bid" && x.notice_type === "pre_spec"))
     && (!q || (x.title + " " + (x.organization || "")).toLowerCase().includes(q)));
@@ -354,7 +348,7 @@ $("f").addEventListener("submit", async (e) => {
   e.preventDefault(); $("err").textContent = "";
   try { await open($("pw").value); } catch (err) { $("err").textContent = "비밀번호가 맞지 않거나 연결에 실패했어요."; }
 });
-$("q").addEventListener("input", renderWatch);
+if ($("q")) $("q").addEventListener("input", renderWatch);
 document.querySelectorAll(".tools button").forEach((b) => b.addEventListener("click", () => {
   document.querySelectorAll(".tools button").forEach((x) => x.classList.remove("on"));
   b.classList.add("on"); typeFilter = b.dataset.t; renderWatch();
