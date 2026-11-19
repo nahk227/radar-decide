@@ -124,11 +124,11 @@ function render(r) {
       ${r.status === "한다" && r.deadline ? `<a class="btn primary" href="${calendar(r)}" target="_blank" rel="noopener">📅 캘린더에 마감 넣기</a>` : ""}
       ${r.url ? `<a class="btn ghost" href="${esc(r.url)}" target="_blank" rel="noopener">공고 원문 보기</a>` : ""}
     </div>
-    <div class="foot"><a href="./dashboard/">팀 대시보드 열기 →</a></div>`;
+    <div class="foot"><a href="./dashboard/#calendar">마감 캘린더에서 보기 →</a></div>`;
 }
 function fail(heading, why) {
   out.innerHTML = `<div class="stamp soft"><b>!</b><span>OOPS</span></div><h1>${heading}</h1><p class="lead">${why}</p>
-    <div class="foot"><a href="./dashboard/">팀 대시보드 열기 →</a></div>`;
+    <div class="foot"><a href="./dashboard/#calendar">마감 캘린더에서 보기 →</a></div>`;
 }
 
 async function record() {
