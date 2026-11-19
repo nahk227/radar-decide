@@ -207,8 +207,8 @@ function render(d) {
   const st = d.stats.by_status || {};
   const soon = d.watch.filter((x) => { const n = daysLeftOf(x.deadline); return n != null && n >= 0 && n <= 7; }).length;
   const tiles = [["볼만한 공고", d.watch.length, true], ["7일 안 마감", soon],
-    ["한다 (진행 중)", st["한다"] || 0], ["제출 완료", st["제출 완료"] || 0, false, "or"], ["선정 (수상·낙찰)", st["선정"] || 0, (st["선정"] || 0) > 0]];
-  $("tiles").innerHTML = tiles.map(([k, v, hl, c]) => `<div class="tile ${hl ? "hl" : ""} ${c || ""}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+    ["한다 (진행 중)", st["한다"] || 0], ["제출 완료", st["제출 완료"] || 0, false, "or"], ["지원 기록", (st["제출 완료"] || 0) + (st["선정"] || 0) + (st["탈락"] || 0), false, "", `선정 ${st["선정"] || 0}건 · 탈락 ${st["탈락"] || 0}건`]];
+  $("tiles").innerHTML = tiles.map(([k, v, hl, c, note]) => `<div class="tile ${hl ? "hl" : ""} ${c || ""}"><div class="k">${k}</div><div class="v">${v}</div>${note ? `<div class="k" style="margin-top:4px">${note}</div>` : ""}</div>`).join("");
   const p = d.pipeline;
   const go = p.filter((x) => x.status === "한다"), sub = p.filter((x) => x.status === "제출 완료"), res = p.filter((x) => ["선정", "탈락"].includes(x.status));
   $("c-go").textContent = go.length; $("c-sub").textContent = sub.length; $("c-res").textContent = res.length;
