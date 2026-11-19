@@ -27,7 +27,16 @@
   .tile { background: var(--card); border: 3px solid var(--lime); padding: 14px 14px 12px; }
   .tile .k { font-size: 12px; font-weight: 800; color: var(--grey); }
   .tile .v { font-size: 34px; font-weight: 900; letter-spacing: -1px; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .tile.hl { background: var(--lime); } .tile.or { background: var(--orange); border-color: var(--orange); } .tile.or .k { color: var(--ink); }
+  .tile.hl { background: var(--lime); }
+  .tile { cursor: pointer; transition: transform .12s ease; } .tile:hover { transform: translateY(-2px); }
+  .tile .go { font-size: 11px; font-weight: 800; margin-top: 6px; opacity: .7; }
+  .hist { margin-top: 14px; background: #fff; border: 3px solid var(--ink); padding: 6px 16px 10px; }
+  .hist[hidden] { display: none; }
+  .hist .hh { display:flex; justify-content:space-between; align-items:center; padding: 10px 0 6px; border-bottom: 2px solid var(--ink); }
+  .hist .hh b { font-size: 16px; font-weight: 900; }
+  .hist .hh button { font: inherit; font-size: 12px; font-weight: 800; background: none; border: 0; cursor: pointer; }
+  .res { display:inline-block; font-size: 11px; font-weight: 900; padding: 3px 8px; }
+  .res.won { background: var(--lime); } .res.lost { background: #E5E1D6; } .res.wait { background: var(--orange); } .tile.or { background: var(--orange); border-color: var(--orange); } .tile.or .k { color: var(--ink); }
   .sec { display:flex; align-items:center; gap: 12px; margin: 38px 0 14px; }
   .sec h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin: 0; white-space: nowrap; }
   .sec .line { flex: 1; height: 1px; background: var(--ink); } .sec .n { font-size: 13px; font-weight: 800; color: var(--grey); }
@@ -117,6 +126,10 @@
   <div class="rule"></div><div class="rule2"></div>
 
   <div class="tiles" id="tiles"></div>
+  <div class="hist" id="hist" hidden>
+    <div class="hh"><b>지원 기록</b><button id="hist-x">닫기 ✕</button></div>
+    <div id="hist-list"></div>
+  </div>
 
 
   <div id="calendar">
@@ -206,9 +219,11 @@ function render(d) {
   $("at").textContent = "갱신 " + new Date(d.generated_at).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
   const st = d.stats.by_status || {};
   const soon = d.watch.filter((x) => { const n = daysLeftOf(x.deadline); return n != null && n >= 0 && n <= 7; }).length;
-  const tiles = [["볼만한 공고", d.watch.length, true], ["7일 안 마감", soon],
-    ["한다 (진행 중)", st["한다"] || 0], ["제출 완료", st["제출 완료"] || 0, false, "or"], ["지원 기록", (st["제출 완료"] || 0) + (st["선정"] || 0) + (st["탈락"] || 0), false, "", `선정 ${st["선정"] || 0}건 · 탈락 ${st["탈락"] || 0}건`]];
-  $("tiles").innerHTML = tiles.map(([k, v, hl, c, note]) => `<div class="tile ${hl ? "hl" : ""} ${c || ""}"><div class="k">${k}</div><div class="v">${v}</div>${note ? `<div class="k" style="margin-top:4px">${note}</div>` : ""}</div>`).join("");
+  const tiles = [["볼만한 공고", d.watch.length, true, "", "", "watch"], ["7일 안 마감", soon, false, "", "", "soon"],
+    ["한다 (진행 중)", st["한다"] || 0, false, "", "", "board"], ["제출 완료", st["제출 완료"] || 0, false, "or", "", "board"],
+    ["지원 기록", (st["제출 완료"] || 0) + (st["선정"] || 0) + (st["탈락"] || 0), false, "", `선정 ${st["선정"] || 0}건 · 탈락 ${st["탈락"] || 0}건`, "hist"]];
+  $("tiles").innerHTML = tiles.map(([k, v, hl, c, note, act]) => `<div class="tile ${hl ? "hl" : ""} ${c || ""}" data-act="${act}" role="button" tabindex="0"><div class="k">${k}</div><div class="v">${v}</div>${note ? `<div class="k" style="margin-top:4px">${note}</div>` : ""}<div class="go">${act === "hist" ? "목록 보기 ↓" : "바로 가기 →"}</div></div>`).join("");
+  renderHistory();
   const p = d.pipeline;
   const go = p.filter((x) => x.status === "한다"), sub = p.filter((x) => x.status === "제출 완료"), res = p.filter((x) => ["선정", "탈락"].includes(x.status));
   $("c-go").textContent = go.length; $("c-sub").textContent = sub.length; $("c-res").textContent = res.length;
@@ -281,6 +296,41 @@ $("cal").addEventListener("click", (e) => {
 { const n = new Date(); calY = n.getFullYear(); calM = n.getMonth();
   const m = location.hash.match(/calendar=(\d{4})-(\d{2})-(\d{2})/);
   if (m) { calY = +m[1]; calM = +m[2] - 1; calSel = m[1] + "-" + m[2] + "-" + m[3]; } }
+
+
+// --- 지원 기록 & clickable tiles ---
+const kday = (s) => s ? new Date(s).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\s/g, "") : "";
+function renderHistory() {
+  const items = DATA.pipeline.filter((x) => ["제출 완료", "선정", "탈락"].includes(x.status))
+    .sort((a, b) => String(b.submitted_at || b.deadline || "").localeCompare(String(a.submitted_at || a.deadline || "")));
+  $("hist-list").innerHTML = items.length ? items.map((x) => {
+    const cls = x.status === "선정" ? "won" : x.status === "탈락" ? "lost" : "wait";
+    const label = x.status === "제출 완료" ? "결과 대기" : x.status;
+    const when = x.submitted_at ? kday(x.submitted_at) + " 제출" : "";
+    return `<div class="item"><div class="body"><span class="pill t-${esc(x.notice_type)}">${TYPE[x.notice_type] || ""}</span>
+      ${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>` : `<b style="font-size:15px">${esc(x.title)}</b>`}
+      <div class="sub">${[esc(x.organization), when].filter(Boolean).join(" · ")}</div></div>
+      <div class="right"><span class="res ${cls}">${label}</span></div></div>`;
+  }).join("") : `<div class="empty">아직 지원 기록이 없어요. 리마인드 메일이나 월요일 보드에서 '제출 완료'를 누르면 쌓여요.</div>`;
+}
+function tileAction(act) {
+  if (act === "hist") { const h = $("hist"); h.hidden = !h.hidden; if (!h.hidden) h.scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
+  if (act === "board") return document.querySelector(".board").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (act === "watch" || act === "soon") {
+    $("q").value = ""; typeFilter = "";
+    document.querySelectorAll(".tools button").forEach((x) => x.classList.toggle("on", x.dataset.t === ""));
+    renderWatch();
+    if (act === "soon") {
+      const items = DATA.watch.filter((x) => { const n = daysLeftOf(x.deadline); return n != null && n >= 0 && n <= 7; });
+      $("n-watch").textContent = `7일 안 마감 ${items.length}건`;
+      fill("watch", items, (x) => (x.grade === "alert" ? "아침 메일 대상" : "50점 이상"), "7일 안에 마감되는 공고가 없어요");
+    }
+    $("watch").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+$("tiles").addEventListener("click", (e) => { const t = e.target.closest(".tile"); if (t) tileAction(t.dataset.act); });
+$("tiles").addEventListener("keydown", (e) => { if (e.key === "Enter") { const t = e.target.closest(".tile"); if (t) tileAction(t.dataset.act); } });
+$("hist-x").addEventListener("click", () => { $("hist").hidden = true; });
 
 async function open(pw) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/dashboard_data`, {
