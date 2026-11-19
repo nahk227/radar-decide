@@ -36,7 +36,7 @@
   .hist .hh b { font-size: 16px; font-weight: 900; }
   .hist .hh button { font: inherit; font-size: 12px; font-weight: 800; background: none; border: 0; cursor: pointer; }
   .res { display:inline-block; font-size: 11px; font-weight: 900; padding: 3px 8px; }
-  .res.won { background: var(--lime); } .res.lost { background: #E5E1D6; } .res.wait { background: var(--orange); } .tile.or { background: var(--orange); border-color: var(--orange); } .tile.or .k { color: var(--ink); }
+  .res.won { background: var(--lime); } .res.lost { background: #E5E1D6; } .res.wait { background: var(--orange); } .tile.or { background: var(--orange); border-color: var(--orange); } .tile.or .k { color: var(--ink); } .tile.sk { background: var(--sky); border-color: var(--sky); } .tile.sk .k { color: var(--ink); }
   .sec { display:flex; align-items:center; gap: 12px; margin: 38px 0 14px; }
   .sec h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin: 0; white-space: nowrap; }
   .sec .line { flex: 1; height: 1px; background: var(--ink); } .sec .n { font-size: 13px; font-weight: 800; color: var(--grey); }
@@ -215,7 +215,7 @@ function render(d) {
   const soon = d.watch.filter((x) => { const n = daysLeftOf(x.deadline); return n != null && n >= 0 && n <= 7; }).length;
   const tiles = [["볼만한 공고", d.watch.length, true, "", "", "watch"], ["7일 안 마감", soon, false, "", "", "soon"],
     ["한다 (진행 중)", st["한다"] || 0, false, "", "", "go"], ["제출 완료", st["제출 완료"] || 0, false, "or", "", "sub"],
-    ["지원 기록", (st["제출 완료"] || 0) + (st["선정"] || 0) + (st["탈락"] || 0), false, "", `선정 ${st["선정"] || 0}건 · 탈락 ${st["탈락"] || 0}건`, "hist"]];
+    ["지원 기록", (st["제출 완료"] || 0) + (st["선정"] || 0) + (st["탈락"] || 0), false, "sk", `선정 ${st["선정"] || 0}건 · 탈락 ${st["탈락"] || 0}건`, "hist"]];
   $("tiles").innerHTML = tiles.map(([k, v, hl, c, note, act]) => `<div class="tile ${hl ? "hl" : ""} ${c || ""}" data-act="${act}" role="button" tabindex="0"><div class="k">${k}</div><div class="v">${v}</div>${note ? `<div class="k" style="margin-top:4px">${note}</div>` : ""}<div class="go">목록 보기 ↓</div></div>`).join("");
   renderHistory();
   const p = d.pipeline;
