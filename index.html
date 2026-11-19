@@ -5,47 +5,135 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<title>결정 기록</title>
+<meta name="color-scheme" content="light">
+<title>조선혁신소 기회 레이더</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  :root { --bg:#f4f4f5; --card:#fff; --text:#18181b; --muted:#71717a; --line:#e4e4e7; --ok:#16a34a; --no:#52525b; --err:#dc2626; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#18181b; --card:#27272a; --text:#fafafa; --muted:#a1a1aa; --line:#3f3f46; } }
+  :root { --ink:#111; --paper:#F6F4EE; --card:#EFECE4; --lime:#EAF53B; --pink:#FF3EA5; --sky:#33D6FF; --grey:#6F6B63; --red:#E5484D; }
   * { box-sizing: border-box; }
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
-         background:var(--bg); color:var(--text); font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; }
-  .card { width:100%; max-width:420px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:28px 24px; text-align:center; }
-  .icon { font-size:44px; line-height:1; }
-  h1 { font-size:22px; margin:14px 0 8px; }
-  p { margin:6px 0; color:var(--muted); font-size:15px; line-height:1.5; }
-  .title { color:var(--text); font-weight:600; margin-top:12px; }
-  .go { color:var(--ok); } .no { color:var(--no); } .err { color:var(--err); }
+  html, body { background: #E9E6DE; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px 14px;
+         color:var(--ink); font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; word-break:keep-all; }
+  .sheet { width:100%; max-width:460px; background:var(--paper); padding:26px 22px 24px; box-shadow: 0 18px 50px rgba(0,0,0,.12);
+           animation: rise .45s cubic-bezier(.2,.9,.3,1.2) both; }
+  @keyframes rise { from { opacity:0; transform: translateY(18px) scale(.98); } to { opacity:1; transform:none; } }
+  .mast { font-size:13px; font-weight:900; letter-spacing:-0.2px; }
+  .swipe { height:8px; background:var(--lime); width:0; margin-top:2px; animation: swipe .7s ease-out .25s forwards; max-width:170px; }
+  @keyframes swipe { to { width:100%; } }
+  .rule { height:3px; background:var(--ink); margin-top:12px; } .rule2 { height:1px; background:var(--ink); margin-top:3px; }
+
+  .stamp { margin: 30px auto 0; width: 132px; height: 132px; border-radius: 50%; background: var(--lime); display:flex; flex-direction:column;
+           align-items:center; justify-content:center; transform: rotate(-8deg) scale(0); animation: stamp .5s cubic-bezier(.2,1.6,.4,1) .35s forwards; }
+  .stamp b { font-size: 34px; font-weight: 900; letter-spacing: -1.5px; line-height: 1; }
+  .stamp span { font-size: 11px; font-weight: 800; letter-spacing: 2px; margin-top: 6px; }
+  .stamp.dark { background: var(--ink); color: var(--lime); }
+  .stamp.soft { background: #E5E1D6; }
+  @keyframes stamp { 0% { transform: rotate(-8deg) scale(1.8); opacity:0; } 60% { opacity:1; } 100% { transform: rotate(-8deg) scale(1); opacity:1; } }
+
+  h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.8px; text-align:center; margin: 22px 0 0; line-height: 1.3; }
+  h1 em { font-style: normal; background: var(--lime); padding: 0 6px; }
+  .lead { text-align:center; color:var(--grey); font-size: 15px; line-height: 1.6; margin: 8px 0 0; }
+
+  .card { margin-top: 20px; background: var(--card); border: 3px solid var(--lime); padding: 16px 16px 14px; opacity:0; animation: rise .45s ease-out .55s forwards; }
+  .rail { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .pill { font-size: 12px; font-weight: 900; padding: 4px 8px; border-radius: 5px; }
+  .t-contest { background: var(--pink); } .t-bid, .t-pre_spec { background: var(--sky); } .t-grant { background:#3DFF8B; }
+  .due { font-size: 12px; font-weight: 900; border: 2px solid var(--pink); border-radius: 6px; padding: 3px 7px; white-space: nowrap; }
+  .card .title { font-size: 18px; font-weight: 900; letter-spacing: -0.4px; line-height: 1.4; margin-top: 12px; }
+  .card .org { font-size: 13px; color: var(--grey); margin-top: 4px; }
+  .dday { font-size: 40px; font-weight: 900; letter-spacing: -1.5px; color: var(--red); margin-top: 10px; font-variant-numeric: tabular-nums; }
+
+  .next { margin-top: 18px; }
+  .next .k { font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--grey); }
+  .steps { list-style: none; padding: 0; margin: 8px 0 0; }
+  .steps li { display:flex; gap: 10px; align-items:flex-start; font-size: 14px; line-height: 1.5; padding: 8px 0; border-bottom: 1px solid #D9D5CB; }
+  .steps li:last-child { border-bottom: 0; }
+  .steps i { font-style: normal; flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--lime);
+             font-size: 12px; font-weight: 900; display:flex; align-items:center; justify-content:center; margin-top: 1px; }
+
+  .btns { display:grid; gap: 8px; margin-top: 18px; }
+  .btn { display:block; text-align:center; padding: 15px; font-size: 16px; font-weight: 900; text-decoration:none; color: var(--ink); border-radius: 12px; }
+  .btn.primary { background: var(--lime); } .btn.ghost { border: 2px solid var(--ink); }
+  .foot { text-align:center; font-size: 12px; color: var(--grey); margin-top: 16px; }
+  .foot a { color: var(--ink); font-weight: 700; }
+  .loading { text-align:center; padding: 50px 0 30px; font-weight: 800; color: var(--grey); }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--ink); margin: 0 3px; animation: blink 1s infinite; }
+  .dot:nth-child(2) { animation-delay: .15s; } .dot:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
 </style>
 </head>
 <body>
-<main class="card" id="card">
-  <div class="icon">⏳</div>
-  <h1>기록하는 중…</h1>
-  <noscript><p>이 페이지는 자바스크립트가 필요해요. 브라우저에서 다시 열어 주세요.</p></noscript>
+<main class="sheet">
+  <div class="mast">조선혁신소 기회 레이더</div>
+  <div class="swipe"></div>
+  <div class="rule"></div><div class="rule2"></div>
+  <div id="out"><div class="loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div style="margin-top:12px">기록하는 중</div></div></div>
+  <noscript><p class="lead">이 페이지는 자바스크립트가 필요해요. 브라우저에서 다시 열어 주세요.</p></noscript>
 </main>
 <script>
 // 결정은 페이지가 열린 뒤 스크립트로만 기록한다.
 // (메일 보안 장치가 링크를 미리 열어 봐도 스크립트는 실행하지 않으므로 잘못 기록되지 않는다)
 const SUPABASE_URL = "https://wfcsfoisuepjpmhvlvvt.supabase.co";
 const PUBLISHABLE_KEY = "sb_publishable_73Q7C1gJ9_xOvMMZMbTWXw__xxfR9c4"; // 공개용 키: apply_decision 함수만 부를 수 있음
+const TYPE = { contest: "공모전", bid: "입찰", pre_spec: "사전규격", grant: "지원사업" };
+const out = document.getElementById("out");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-const card = document.getElementById("card");
-function show(icon, heading, cls, lines) {
-  card.innerHTML = "";
-  const i = document.createElement("div"); i.className = "icon"; i.textContent = icon;
-  const h = document.createElement("h1"); h.className = cls; h.textContent = heading;
-  card.append(i, h);
-  for (const [text, extra] of lines) {
-    const p = document.createElement("p"); if (extra) p.className = extra; p.textContent = text; card.append(p);
-  }
+function daysLeft(d) {
+  if (!d) return null;
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  return Math.round((new Date(d + "T00:00:00") - t) / 86400000);
+}
+function calendar(r) {
+  if (!r.deadline) return "";
+  const d = r.deadline.replace(/-/g, "");
+  const n = new Date(r.deadline + "T00:00:00"); n.setDate(n.getDate() + 1);
+  const d2 = n.toISOString().slice(0, 10).replace(/-/g, "");
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("[마감] " + r.title)
+    + "&dates=" + d + "/" + d2 + "&details=" + encodeURIComponent(r.url || "");
+}
+const COPY = {
+  "한다":      { stamp: ["한다", "GO"], cls: "", h: "<em>한다</em>로 기록했어요", lead: "좋은 선택이에요. 마감까지 함께 챙길게요.",
+                 steps: ["마감 <b>2주 · 1주 · 3일 전</b>에 팀 메일로 다시 알려 드려요.", "제출하면 리마인드 메일의 <b>제출 완료</b>를 눌러 주세요.", "진행 상황은 월요일 보드와 팀 대시보드에서 볼 수 있어요."] },
+  "제출 완료": { stamp: ["제출", "DONE"], cls: "dark", h: "<em>제출 완료</em>로 기록했어요", lead: "수고했어요! 이제 결과를 기다려요.",
+                 steps: ["결과가 나오면 월요일 보드에서 <b>선정 / 탈락</b>을 눌러 주세요.", "금요일 리포트의 선정률에 반영돼요."] },
+  "선정":      { stamp: ["선정", "WIN"], cls: "", h: "<em>선정</em>을 축하해요 🎉", lead: "팀의 첫 번째 트로피가 쌓였어요.",
+                 steps: ["금요일 리포트에 선정률과 상금 합계로 기록돼요.", "비슷한 공고는 앞으로 더 눈여겨볼게요."] },
+  "탈락":      { stamp: ["다음", "NEXT"], cls: "soft", h: "결과를 기록했어요", lead: "이번 경험도 다음 제안의 재료가 돼요.",
+                 steps: ["금요일 리포트의 선정률에 반영돼요.", "더 잘 맞는 기회를 계속 찾아 드릴게요."] },
+  "안 한다":   { stamp: ["패스", "PASS"], cls: "soft", h: "이번 건은 넘어갈게요", lead: "이 공고는 다시 알리지 않아요.", steps: [] },
+};
+
+function render(r) {
+  const c = COPY[r.status] || { stamp: ["확인", "INFO"], cls: "soft", h: `이미 <em>${esc(r.status)}</em> 상태예요`, lead: "진행 중인 건이라 바꾸지 않았어요.", steps: [] };
+  const same = r.changed === false && COPY[r.status];
+  const left = daysLeft(r.deadline);
+  const due = r.deadline ? `<span class="due">${r.deadline.slice(5).replace("-", ".")}일 까지</span>` : "";
+  out.innerHTML = `
+    <div class="stamp ${c.cls}"><b>${c.stamp[0]}</b><span>${c.stamp[1]}</span></div>
+    <h1>${same ? `이미 <em>${esc(r.status)}</em>로 기록돼 있어요` : c.h}</h1>
+    <p class="lead">${same ? "다시 누르지 않아도 돼요." : c.lead}</p>
+    <div class="card">
+      <div class="rail"><span class="pill t-${esc(r.notice_type)}">${TYPE[r.notice_type] || "공고"}</span>${due}</div>
+      <div class="title">${esc(r.title)}</div>
+      ${r.organization ? `<div class="org">${esc(r.organization)}</div>` : ""}
+      ${left != null && left >= 0 ? `<div class="dday">D-${left}</div>` : ""}
+    </div>
+    ${c.steps.length ? `<div class="next"><div class="k">NEXT</div><ul class="steps">${c.steps.map((s, i) => `<li><i>${i + 1}</i><span>${s}</span></li>`).join("")}</ul></div>` : ""}
+    <div class="btns">
+      ${r.status === "한다" && r.deadline ? `<a class="btn primary" href="${calendar(r)}" target="_blank" rel="noopener">📅 캘린더에 마감 넣기</a>` : ""}
+      ${r.url ? `<a class="btn ghost" href="${esc(r.url)}" target="_blank" rel="noopener">공고 원문 보기</a>` : ""}
+    </div>
+    <div class="foot"><a href="./dashboard/">팀 대시보드 열기 →</a></div>`;
+}
+function fail(heading, why) {
+  out.innerHTML = `<div class="stamp soft"><b>!</b><span>OOPS</span></div><h1>${heading}</h1><p class="lead">${why}</p>
+    <div class="foot"><a href="./dashboard/">팀 대시보드 열기 →</a></div>`;
 }
 
 async function record() {
   const token = new URLSearchParams(location.search).get("t");
-  if (!token) return show("🔗", "링크가 올바르지 않아요", "err", [["메일의 버튼을 다시 눌러 주세요."]]);
+  if (!token) return fail("링크가 올바르지 않아요", "메일의 버튼을 다시 눌러 주세요.");
   history.replaceState(null, "", location.pathname); // 주소창에서 코드 지우기
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/apply_decision`, {
@@ -55,24 +143,11 @@ async function record() {
     });
     const r = await res.json();
     if (!res.ok || !r.ok) {
-      const why = r && r.error === "expired" ? "링크 유효기간(60일)이 지났어요." : "이미 지워졌거나 잘못된 링크예요.";
-      return show("⚠️", "기록하지 못했어요", "err", [[why]]);
+      return fail("기록하지 못했어요", r && r.error === "expired" ? "링크 유효기간이 지났어요." : "이미 지워졌거나 잘못된 링크예요.");
     }
-    if (r.status === "한다") {
-      show("✅", "'한다'로 기록했어요", "go", [[r.title, "title"], ["담당자로 기록됐고, 마감 전에 다시 알려 드릴게요."]]);
-    } else if (r.status === "안 한다") {
-      show("👌", "'안 한다'로 기록했어요", "no", [[r.title, "title"], ["이 공고는 다시 알리지 않아요. 마음이 바뀌면 '한다'를 눌러도 돼요."]]);
-    } else if (r.changed && r.status === "제출 완료") {
-      show("📮", "'제출 완료'로 기록했어요", "go", [[r.title, "title"], ["수고했어요! 결과가 나오면 월요일 보드에서 선정/탈락을 눌러 주세요."]]);
-    } else if (r.changed && r.status === "선정") {
-      show("🎉", "'선정'으로 기록했어요", "go", [[r.title, "title"], ["축하해요! 금요일 리포트의 선정률과 상금 합계에 반영돼요."]]);
-    } else if (r.changed && r.status === "탈락") {
-      show("📝", "'탈락'으로 기록했어요", "no", [[r.title, "title"], ["기록해 둘게요. 다음 기회를 찾아 드릴게요."]]);
-    } else {
-      show("ℹ️", `이미 '${r.status}' 상태예요`, "", [[r.title, "title"], ["진행 중인 건이라 바꾸지 않았어요."]]);
-    }
+    render(r);
   } catch (e) {
-    show("📶", "연결에 실패했어요", "err", [["잠시 뒤 메일의 버튼을 다시 눌러 주세요."]]);
+    fail("연결에 실패했어요", "잠시 뒤 메일의 버튼을 다시 눌러 주세요.");
   }
 }
 record();
