@@ -34,9 +34,14 @@
   .board { display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .col { background: #fff; border: 1px solid var(--rule); padding: 12px; min-height: 120px; }
   .col h3 { margin: 0 0 8px; font-size: 14px; font-weight: 900; display:flex; justify-content: space-between; }
-  .item { display:flex; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--rule); }
+  .item { display:flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--rule); align-items: flex-start; }
+  .item .body { flex: 1; min-width: 0; }
+  .item .right { flex: none; text-align: right; padding-left: 8px; }
+  .item .right .dd { display:block; font-size: 20px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .item .right small { display:block; font-size: 11px; color: var(--grey); margin-top: 3px; white-space: nowrap; }
+  .score small { font-size: 11px; margin-left: 1px; }
   .item:last-child { border-bottom: 0; }
-  .score { flex: none; width: 44px; height: 44px; background: var(--ink); color: var(--lime); font-weight: 900; font-size: 18px; display:flex; align-items:center; justify-content:center; font-variant-numeric: tabular-nums; }
+  .score { flex: none; width: 52px; height: 48px; background: var(--ink); color: var(--lime); font-weight: 900; font-size: 18px; display:flex; align-items:center; justify-content:center; font-variant-numeric: tabular-nums; }
   .score.hi { background: var(--lime); color: var(--ink); }
   .item a { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 15px; line-height: 1.4; }
   .item a:hover { text-decoration: underline; }
@@ -179,12 +184,12 @@ function dday(d) {
   return n < 0 ? "마감" : n === 0 ? "오늘 마감" : `D-${n}`;
 }
 function row(x, extra = "") {
-  const s = x.total != null ? `<div class="score ${x.total >= 80 ? "hi" : ""}">${x.total}</div>` : "";
-  const dl = x.deadline ? `<span class="dd">${dday(x.deadline)}</span> · ${x.deadline.slice(5).replace("-", ".")}일 까지` : "";
-  return `<div class="item">${s}<div><span class="pill t-${esc(x.notice_type)}">${TYPE[x.notice_type] || ""}</span>
+  const s = x.total != null ? `<div class="score ${x.total >= 80 ? "hi" : ""}">${x.total}<small>점</small></div>` : "";
+  const right = x.deadline ? `<div class="right"><span class="dd">${dday(x.deadline)}</span><small>${x.deadline.slice(5).replace("-", ".")}일 까지</small></div>` : "";
+  return `<div class="item">${s}<div class="body"><span class="pill t-${esc(x.notice_type)}">${TYPE[x.notice_type] || ""}</span>
     <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>
-    <div class="sub">${[esc(x.organization), dl, extra].filter(Boolean).join(" · ")}</div>
-    ${x.reason ? `<div class="sub">“ ${esc(x.reason)} ”</div>` : ""}</div></div>`;
+    <div class="sub">${[esc(x.organization), extra].filter(Boolean).join(" · ")}</div>
+    ${x.reason ? `<div class="sub">“ ${esc(x.reason)} ”</div>` : ""}</div>${right}</div>`;
 }
 function fill(id, items, extra = () => "", empty = "아직 없어요") {
   $(id).innerHTML = items.length ? items.map((x) => row(x, extra(x))).join("") : `<div class="empty">${empty}</div>`;
