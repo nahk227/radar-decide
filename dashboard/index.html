@@ -338,7 +338,6 @@ async function open(pw) {
     body: JSON.stringify({ p_password: pw }) });
   const d = await res.json();
   if (!d.ok) throw new Error("bad");
-  store("radar_pw", pw);
   $("lock").hidden = true; $("app").hidden = false;
   render(d);
 }
@@ -351,10 +350,8 @@ document.querySelectorAll(".tools button").forEach((b) => b.addEventListener("cl
   document.querySelectorAll(".tools button").forEach((x) => x.classList.remove("on"));
   b.classList.add("on"); typeFilter = b.dataset.t; renderWatch();
 }));
-(async () => {
-  const saved = load("radar_pw");
-  if (saved) { try { await open(saved); return; } catch (e) { store("radar_pw"); } }
-  $("lock").hidden = false;
+(async () => {  // no password any more (2026-11-19): open straight away
+  try { await open(""); } catch (e) { $("lock").hidden = false; $("lock").innerHTML = '<div style="font-size:18px;font-weight:900">연결에 실패했어요</div><div style="margin-top:8px;color:var(--grey)">잠시 뒤 새로고침해 주세요.</div>'; }
 })();
 </script>
 </body>
